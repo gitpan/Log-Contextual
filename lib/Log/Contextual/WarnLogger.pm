@@ -1,4 +1,4 @@
-package Log::Contextual::SimpleLogger;
+package Log::Contextual::WarnLogger;
 
 use strict;
 use warnings;
@@ -8,16 +8,17 @@ use warnings;
 
     no strict 'refs';
 
+    my $is_name = "is_$name";
     *{$name} = sub {
       my $self = shift;
 
       $self->_log( $name, @_ )
-        if ($self->{$name});
+        if $self->$is_name;
     };
 
-    *{"is_$name"} = sub {
+    *{$is_name} = sub {
       my $self = shift;
-      return $self->{$name};
+      return $ENV{$self->{env_prefix} . '_' . uc $name};
     };
   }
 }
@@ -26,8 +27,8 @@ sub new {
   my ($class, $args) = @_;
   my $self = bless {}, $class;
 
-  $self->{$_} = 1 for @{$args->{levels}};
-  $self->{coderef} = $args->{coderef} || sub { print STDERR @_};
+  $self->{env_prefix} = $args->{env_prefix} or
+     die 'no env_prefix passed to Log::Contextual::WarnLogger->new';
   return $self;
 }
 
@@ -36,7 +37,7 @@ sub _log {
   my $level   = shift;
   my $message = join( "\n", @_ );
   $message .= "\n" unless $message =~ /\n$/;
-  $self->{coderef}->(sprintf( "[%s] %s", $level, $message ));
+  warn "[$level] $message";
 }
 
 1;
@@ -45,49 +46,54 @@ __END__
 
 =head1 NAME
 
-Log::Contextual::SimpleLogger - Super simple logger made for playing with Log::Contextual
+Log::Contextual::WarnLogger - Simple logger for libraries using Log::Contextual
 
 =head1 SYNOPSIS
 
- use Log::Contextual::SimpleLogger;
+ package My::Package;
+ use Log::Contextual::WarnLogger;
  use Log::Contextual qw( :log ),
-   -logger => Log::Contextual::SimpleLogger->new({ levels => [qw( debug )]});
+   -default_logger => Log::Contextual::WarnLogger->new({
+      env_prefix => 'MY_PACKAGE'
+   });
 
+ # warns '[info] program started' if $ENV{MY_PACKAGE_TRACE} is set
  log_info { 'program started' }; # no-op because info is not in levels
  sub foo {
+   # warns '[debug] entered foo' if $ENV{MY_PACKAGE_DEBUG} is set
    log_debug { 'entered foo' };
    ...
  }
 
 =head1 DESCRIPTION
 
-This module is a simple logger made mostly for demonstration and initial
-experimentation with L<Log::Contextual>.  We recommend you use a real logger
-instead.  For something more serious but not overly complicated, take a look at
-L<Log::Dispatchouli>.
+This module is a simple logger made for libraries using L<Log::Contextual>.  We
+recommend the use of this logger as your default logger as it is simple and
+useful for most users, yet users can use L<Log::Contextual/set_logger> to override
+your choice of logger in their own code thanks to the way L<Log::Contextual>
+works.
 
 =head1 METHODS
 
 =head2 new
 
-Arguments: C<< Dict[ levels => ArrayRef[Str], coderef => Optional[CodeRef] ] $conf >>
+Arguments: C<< Dict[ env_prefix => Str ] $conf >>
 
- my $l = Log::Contextual::SimpleLogger->new({
-   levels => [qw( info warn )],
-   coderef => sub { print @_ }, # the default prints to STDERR
+ my $l = Log::Contextual::WarnLogger->new({
+   env_prefix
  });
 
-Creates a new SimpleLogger object with the passed levels enabled and optionally
-a C<CodeRef> may be passed to modify how the logs are output/stored.
+Creates a new logger object where C<env_prefix> defines what the prefix is for
+the environment variables that will be checked for the six log levels.  For
+example, if C<env_prefix> is set to C<FREWS_PACKAGE> the following environment
+variables will be used:
 
-Levels may contain:
-
- trace
- debug
- info
- warn
- error
- fatal
+ FREWS_PACKAGE_TRACE
+ FREWS_PACKAGE_DEBUG
+ FREWS_PACKAGE_INFO
+ FREWS_PACKAGE_WARN
+ FREWS_PACKAGE_ERROR
+ FREWS_PACKAGE_FATAL
 
 =head2 $level
 
@@ -98,7 +104,7 @@ All of the following six methods work the same.  The basic pattern is:
  sub $level {
    my $self = shift;
 
-   print STDERR "[$level] " . join qq{\n}, @_;
+   warn "[$level] " . join qq{\n}, @_;
       if $self->is_$level;
  }
 
@@ -129,7 +135,7 @@ All of the following six methods work the same.  The basic pattern is:
 =head2 is_$level
 
 All of the following six functions just return true if their respective
-level is enabled.
+environment variable is enabled.
 
 =head3 is_trace
 

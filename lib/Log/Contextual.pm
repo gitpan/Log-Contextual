@@ -3,7 +3,7 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.00101';
+our $VERSION = '0.00200';
 
 require Exporter;
 use Data::Dumper::Concise;
@@ -46,16 +46,39 @@ sub import {
       unless @_;
 
    for my $idx ( 0 .. $#_ ) {
-      if ( $_[$idx] eq '-logger' ) {
+      my $val = $_[$idx];
+      if ( defined $val && $val eq '-logger' ) {
          set_logger($_[$idx + 1]);
          splice @_, $idx, 2;
-         last;
+      } elsif ( defined $val && $val eq '-default_logger' ) {
+         _set_default_logger_for(scalar caller, $_[$idx + 1]);
+         splice @_, $idx, 2;
       }
    }
    $package->export_to_level(1, $package, @_);
 }
 
 our $Get_Logger;
+our %Default_Logger;
+
+sub _set_default_logger_for {
+   my $logger = $_[1];
+   if(ref $logger ne 'CODE') {
+      die 'logger was not a CodeRef or a logger object.  Please try again.'
+         unless blessed($logger);
+      $logger = do { my $l = $logger; sub { $l } }
+   }
+   $Default_Logger{$_[0]} = $logger
+}
+
+sub _get_logger($) {
+   my $package = shift;
+   (
+      $Get_Logger ||
+      $Default_Logger{$package} ||
+      die q( no logger set!  you can't try to log something without a logger! )
+   )->($package);
+}
 
 sub set_logger {
    my $logger = $_[0];
@@ -64,6 +87,9 @@ sub set_logger {
          unless blessed($logger);
       $logger = do { my $l = $logger; sub { $l } }
    }
+
+   warn 'set_logger (or -logger) called more than once!  This is a bad idea!'
+      if $Get_Logger;
    $Get_Logger = $logger;
 }
 
@@ -81,48 +107,54 @@ sub with_logger {
 
 
 sub log_trace (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->trace($code->(@_))
       if $log->is_trace;
    @_
 }
 
 sub log_debug (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->debug($code->(@_))
       if $log->is_debug;
    @_
 }
 
 sub log_info (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->info($code->(@_))
       if $log->is_info;
    @_
 }
 
 sub log_warn (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->warn($code->(@_))
       if $log->is_warn;
    @_
 }
 
 sub log_error (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->error($code->(@_))
       if $log->is_error;
    @_
 }
 
 sub log_fatal (&@) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->fatal($code->(@_))
       if $log->is_fatal;
    @_
@@ -130,54 +162,60 @@ sub log_fatal (&@) {
 
 
 sub logS_trace (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->trace($code->($value))
       if $log->is_trace;
    $value
 }
 
 sub logS_debug (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->debug($code->($value))
       if $log->is_debug;
    $value
 }
 
 sub logS_info (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->info($code->($value))
       if $log->is_info;
    $value
 }
 
 sub logS_warn (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->warn($code->($value))
       if $log->is_warn;
    $value
 }
 
 sub logS_error (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->error($code->($value))
       if $log->is_error;
    $value
 }
 
 sub logS_fatal (&$) {
-   my $log  = $Get_Logger->();
+   my $log  = _get_logger( caller );
    my $code = shift;
    my $value = shift;
+   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 1;
    $log->fatal($code->($value))
       if $log->is_fatal;
    $value
@@ -342,14 +380,31 @@ Log::Contextual - Simple logging interface with a contextual log
 
  foo();
 
+Beginning with version 1.008 L<Log::Dispatchouli> also works out of the box
+with C<Log::Contextual>:
+
+ use Log::Contextual qw( :log :dlog set_logger );
+ use Log::Dispatchouli;
+ my $ld = Log::Dispatchouli->new({
+    ident     => 'slrtbrfst',
+    to_stderr => 1,
+    debug     => 1,
+ });
+
+ set_logger $ld;
+
+ log_debug { 'program started' };
+
 =head1 DESCRIPTION
 
 This module is a simple interface to extensible logging.  It is bundled with a
 really basic logger, L<Log::Contextual::SimpleLogger>, but in general you
 should use a real logger instead of that.  For something more serious but not
-overly complicated, take a look at L<Log::Dispatchouli>.
+overly complicated, try L<Log::Dispatchouli> (see L</SYNOPSIS> for example.)
 
 =head1 OPTIONS
+
+=head2 -logger
 
 When you import this module you may use C<-logger> as a shortcut for
 L<set_logger>, for example:
@@ -364,6 +419,23 @@ case you might try something like the following:
  my $var_log;
  BEGIN { $var_log = VarLogger->new }
  use Log::Contextual qw( :dlog ), -logger => $var_log;
+
+=head2 -default_logger
+
+The C<-default_logger> import option is similar to the C<-logger> import option
+except C<-default_logger> sets the the default logger for the current package.
+
+Basically it sets the logger to be used if C<set_logger> is never called; so
+
+ package My::Package;
+ use Log::Contextual::SimpleLogger;
+ use Log::Contextual qw( :log ),
+   -default_logger => Log::Contextual::WarnLogger->new({
+      env_prefix => 'MY_PACKAGE'
+   });
+
+If you are interested in using this package for a module you are putting on
+CPAN we recommend L<Log::Contextual::WarnLogger> for your default logger.
 
 =head1 A WORK IN PROGRESS
 
@@ -388,7 +460,9 @@ Arguments: C<Ref|CodeRef $returning_logger>
 
 C<set_logger> will just set the current logger to whatever you pass it.  It
 expects a C<CodeRef>, but if you pass it something else it will wrap it in a
-C<CodeRef> for you.
+C<CodeRef> for you.  C<set_logger> is really meant only to be called from a
+top-level script.  To avoid foot-shooting the function will warn if you call it
+more than once.
 
 =head2 with_logger
 

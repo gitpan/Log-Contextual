@@ -1,5 +1,12 @@
 ChangeLog for Log-Contextual
 
+0.00200 2010-03-03
+  - add example for Log::Dispatchouli since it works nicely now
+  - make Log::Log4perl work out of the box
+  - Added WarnLogger for libraries
+  - Warn if set_logger is called more than once
+  - Fix tiny POD errors
+
 0.00101 2010-02-21
   - Fix tests to not need use lib (incorrect test failures)
 
