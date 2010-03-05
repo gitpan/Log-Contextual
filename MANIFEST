@@ -16,6 +16,7 @@ META.yml
 t/default_logger.t
 t/dlog.t
 t/log.t
+t/log4perl.conf
 t/log4perl.t
 t/simplelogger.t
 t/warnlogger.t
