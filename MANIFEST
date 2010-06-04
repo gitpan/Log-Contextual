@@ -18,5 +18,6 @@ t/dlog.t
 t/log.t
 t/log4perl.conf
 t/log4perl.t
+t/package_logger.t
 t/simplelogger.t
 t/warnlogger.t
