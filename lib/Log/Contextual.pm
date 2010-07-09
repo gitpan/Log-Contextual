@@ -3,7 +3,7 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.00300';
+our $VERSION = '0.00301';
 
 require Exporter;
 use Data::Dumper::Concise;
@@ -28,6 +28,12 @@ my @log = (qw(
    log_error logS_error
    log_fatal logS_fatal
  ));
+
+eval {
+   require Log::Log4perl;
+   die if $Log::Log4perl::VERSION < 1.29;
+   Log::Log4perl->wrapper_register(__PACKAGE__)
+};
 
 our @EXPORT_OK = (
    @dlog, @log,
@@ -125,7 +131,6 @@ sub _do_log {
    my $code   = shift;
    my @values = @_;
 
-   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 2;
    $logger->$level($code->(@_))
       if $logger->${\"is_$level"};
    @values
@@ -137,7 +142,6 @@ sub _do_logS {
    my $code   = shift;
    my $value  = shift;
 
-   local $Log::Log4perl::caller_depth = ($Log::Log4perl::caller_depth || 0 ) + 2;
    $logger->$level($code->($value))
       if $logger->${\"is_$level"};
    $value
