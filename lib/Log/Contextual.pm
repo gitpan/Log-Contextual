@@ -3,7 +3,9 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.00304';
+our $VERSION = '0.00305';
+
+my @levels = qw(debug trace warn info error fatal);
 
 require Exporter;
 use Data::Dumper::Concise;
@@ -11,23 +13,9 @@ use Scalar::Util 'blessed';
 
 BEGIN { our @ISA = qw(Exporter) }
 
-my @dlog = (qw(
-   Dlog_debug DlogS_debug
-   Dlog_trace DlogS_trace
-   Dlog_warn DlogS_warn
-   Dlog_info DlogS_info
-   Dlog_error DlogS_error
-   Dlog_fatal DlogS_fatal
- ));
+my @dlog = ((map "Dlog_$_", @levels), (map "DlogS_$_", @levels));
 
-my @log = (qw(
-   log_debug logS_debug
-   log_trace logS_trace
-   log_warn logS_warn
-   log_info logS_info
-   log_error logS_error
-   log_fatal logS_fatal
- ));
+my @log = ((map "log_$_", @levels), (map "logS_$_", @levels));
 
 eval {
    require Log::Log4perl;
@@ -147,86 +135,32 @@ sub _do_logS {
    $value
 }
 
-sub log_trace (&@) { _do_log( trace => _get_logger( caller ), shift @_, @_) }
-sub log_debug (&@) { _do_log( debug => _get_logger( caller ), shift @_, @_) }
-sub log_info  (&@) { _do_log( info  => _get_logger( caller ), shift @_, @_) }
-sub log_warn  (&@) { _do_log( warn  => _get_logger( caller ), shift @_, @_) }
-sub log_error (&@) { _do_log( error => _get_logger( caller ), shift @_, @_) }
-sub log_fatal (&@) { _do_log( fatal => _get_logger( caller ), shift @_, @_) }
+for my $level (@levels) {
+   no strict 'refs';
 
-sub logS_trace (&$) { _do_logS( trace => _get_logger( caller ), $_[0], $_[1]) }
-sub logS_debug (&$) { _do_logS( debug => _get_logger( caller ), $_[0], $_[1]) }
-sub logS_info  (&$) { _do_logS( info  => _get_logger( caller ), $_[0], $_[1]) }
-sub logS_warn  (&$) { _do_logS( warn  => _get_logger( caller ), $_[0], $_[1]) }
-sub logS_error (&$) { _do_logS( error => _get_logger( caller ), $_[0], $_[1]) }
-sub logS_fatal (&$) { _do_logS( fatal => _get_logger( caller ), $_[0], $_[1]) }
+   *{"log_$level"} = sub (&@) {
+      _do_log( $level => _get_logger( caller ), shift @_, @_)
+   };
 
+   *{"logS_$level"} = sub (&$) {
+      _do_logS( $level => _get_logger( caller ), $_[0], $_[1])
+   };
 
-sub Dlog_trace (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( trace => _get_logger( caller ), $code, @_ );
-}
+   *{"Dlog_$level"} = sub (&@) {
+     my ($code, @args) = @_;
+     return _do_log( $level => _get_logger( caller ), sub {
+        local $_ = (@args?Data::Dumper::Concise::Dumper @args:'()');
+        $code->(@_)
+     }, @args );
+   };
 
-sub Dlog_debug (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( debug => _get_logger( caller ), $code, @_ );
-}
-
-sub Dlog_info (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( info => _get_logger( caller ), $code, @_ );
-}
-
-sub Dlog_warn (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( warn => _get_logger( caller ), $code, @_ );
-}
-
-sub Dlog_error (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( error => _get_logger( caller ), $code, @_ );
-}
-
-sub Dlog_fatal (&@) {
-  my $code = shift;
-  local $_ = (@_?Data::Dumper::Concise::Dumper @_:'()');
-  return _do_log( fatal => _get_logger( caller ), $code, @_ );
-}
-
-
-sub DlogS_trace (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( trace => _get_logger( caller ), $_[0], $_[1] )
-}
-
-sub DlogS_debug (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( debug => _get_logger( caller ), $_[0], $_[1] )
-}
-
-sub DlogS_info (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( info => _get_logger( caller ), $_[0], $_[1] )
-}
-
-sub DlogS_warn (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( warn => _get_logger( caller ), $_[0], $_[1] )
-}
-
-sub DlogS_error (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( error => _get_logger( caller ), $_[0], $_[1] )
-}
-
-sub DlogS_fatal (&$) {
-  local $_ = Data::Dumper::Concise::Dumper $_[1];
-  _do_logS( fatal => _get_logger( caller ), $_[0], $_[1] )
+   *{"DlogS_$level"} = sub (&$) {
+     my ($code, $ref) = @_;
+     _do_logS( $level => _get_logger( caller ), sub {
+        local $_ = Data::Dumper::Concise::Dumper $ref;
+        $code->($ref)
+     }, $ref )
+   };
 }
 
 1;
@@ -285,6 +219,10 @@ This module is a simple interface to extensible logging.  It is bundled with a
 really basic logger, L<Log::Contextual::SimpleLogger>, but in general you
 should use a real logger instead of that.  For something more serious but not
 overly complicated, try L<Log::Dispatchouli> (see L</SYNOPSIS> for example.)
+
+The reason for this module is to abstract your logging interface so that
+logging is as painless as possible, while still allowing you to switch from one
+logger to another.
 
 =head1 OPTIONS
 
