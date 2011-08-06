@@ -1,5 +1,9 @@
 ChangeLog for Log-Contextual
 
+0.004000 2011-08-06
+  - Support Log::Contextual subclasses for default import options
+  - Allow custom log levels
+
 0.00305 2011-07-27
   - Fix regression that caused D* subs to dumper even if the log level was off
 

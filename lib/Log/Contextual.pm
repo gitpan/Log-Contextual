@@ -3,15 +3,14 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.00305';
+our $VERSION = '0.004000';
 
 my @levels = qw(debug trace warn info error fatal);
 
-require Exporter;
+use Exporter::Declare;
+use Exporter::Declare::Export::Generator;
 use Data::Dumper::Concise;
 use Scalar::Util 'blessed';
-
-BEGIN { our @ISA = qw(Exporter) }
 
 my @dlog = ((map "Dlog_$_", @levels), (map "DlogS_$_", @levels));
 
@@ -23,36 +22,73 @@ eval {
    Log::Log4perl->wrapper_register(__PACKAGE__)
 };
 
-our @EXPORT_OK = (
+# ____ is because tags must have at least one export and we don't want to
+# export anything but the levels selected
+sub ____ {}
+
+exports ('____',
    @dlog, @log,
    qw( set_logger with_logger )
 );
 
-our %EXPORT_TAGS = (
-   dlog => \@dlog,
-   log  => \@log,
-   all  => [@dlog, @log],
-);
+export_tag dlog => ('____');
+export_tag log  => ('____');
+import_arguments qw(logger package_logger default_logger);
 
-sub import {
-   my $package = shift;
+sub before_import {
+   my ($class, $importer, $spec) = @_;
+
    die 'Log::Contextual does not have a default import list'
-      unless @_;
+      if $spec->config->{default};
 
-   for my $idx ( 0 .. $#_ ) {
-      my $val = $_[$idx];
-      if ( defined $val && $val eq '-logger' ) {
-         set_logger($_[$idx + 1]);
-         splice @_, $idx, 2;
-      } elsif ( defined $val && $val eq '-package_logger' ) {
-         _set_package_logger_for(scalar caller, $_[$idx + 1]);
-         splice @_, $idx, 2;
-      } elsif ( defined $val && $val eq '-default_logger' ) {
-         _set_default_logger_for(scalar caller, $_[$idx + 1]);
-         splice @_, $idx, 2;
+   my @levels = @{$class->arg_levels($spec->config->{levels})};
+   for my $level (@levels) {
+      if ($spec->config->{log}) {
+         $spec->add_export("&log_$level", sub (&@) {
+            _do_log( $level => _get_logger( caller ), shift @_, @_)
+         });
+         $spec->add_export("&logS_$level", sub (&@) {
+            _do_logS( $level => _get_logger( caller ), $_[0], $_[1])
+         });
+      }
+      if ($spec->config->{dlog}) {
+         $spec->add_export("&Dlog_$level", sub (&@) {
+           my ($code, @args) = @_;
+           return _do_log( $level => _get_logger( caller ), sub {
+              local $_ = (@args?Data::Dumper::Concise::Dumper @args:'()');
+              $code->(@_)
+           }, @args );
+         });
+         $spec->add_export("&DlogS_$level", sub (&$) {
+           my ($code, $ref) = @_;
+           _do_logS( $level => _get_logger( caller ), sub {
+              local $_ = Data::Dumper::Concise::Dumper $ref;
+              $code->($ref)
+           }, $ref )
+         });
       }
    }
-   $package->export_to_level(1, $package, @_);
+}
+
+sub arg_logger { $_[1] }
+sub arg_levels { $_[1] || [qw(debug trace warn info error fatal)] }
+sub arg_package_logger { $_[1] }
+sub arg_default_logger { $_[1] }
+
+sub after_import {
+   my ($class, $importer, $specs) = @_;
+
+   if (my $l = $class->arg_logger($specs->config->{logger})) {
+      set_logger($l)
+   }
+
+   if (my $l = $class->arg_package_logger($specs->config->{package_logger})) {
+      _set_package_logger_for($importer, $l)
+   }
+
+   if (my $l = $class->arg_default_logger($specs->config->{default_logger})) {
+      _set_default_logger_for($importer, $l)
+   }
 }
 
 our $Get_Logger;
@@ -135,34 +171,6 @@ sub _do_logS {
    $value
 }
 
-for my $level (@levels) {
-   no strict 'refs';
-
-   *{"log_$level"} = sub (&@) {
-      _do_log( $level => _get_logger( caller ), shift @_, @_)
-   };
-
-   *{"logS_$level"} = sub (&$) {
-      _do_logS( $level => _get_logger( caller ), $_[0], $_[1])
-   };
-
-   *{"Dlog_$level"} = sub (&@) {
-     my ($code, @args) = @_;
-     return _do_log( $level => _get_logger( caller ), sub {
-        local $_ = (@args?Data::Dumper::Concise::Dumper @args:'()');
-        $code->(@_)
-     }, @args );
-   };
-
-   *{"DlogS_$level"} = sub (&$) {
-     my ($code, $ref) = @_;
-     _do_logS( $level => _get_logger( caller ), sub {
-        local $_ = Data::Dumper::Concise::Dumper $ref;
-        $code->($ref)
-     }, $ref )
-   };
-}
-
 1;
 
 __END__
@@ -224,7 +232,22 @@ The reason for this module is to abstract your logging interface so that
 logging is as painless as possible, while still allowing you to switch from one
 logger to another.
 
-=head1 OPTIONS
+=head1 A WORK IN PROGRESS
+
+This module is certainly not complete, but we will not break the interface
+lightly, so I would say it's safe to use in production code.  The main result
+from that at this point is that doing:
+
+ use Log::Contextual;
+
+will die as we do not yet know what the defaults should be.  If it turns out
+that nearly everyone uses the C<:log> tag and C<:dlog> is really rare, we'll
+probably make C<:log> the default.  But only time and usage will tell.
+
+=head1 IMPORT OPTIONS
+
+See L</SETTING DEFAULT IMPORT OPTIONS> for information on setting these project
+wide.
 
 =head2 -logger
 
@@ -241,6 +264,17 @@ case you might try something like the following:
  my $var_log;
  BEGIN { $var_log = VarLogger->new }
  use Log::Contextual qw( :dlog ), -logger => $var_log;
+
+=head2 -levels
+
+The C<-levels> import option allows you to define exactly which levels your
+logger supports.  So the default,
+C<< [qw(debug trace warn info error fatal)] >>, works great for
+L<Log::Log4perl>, but it doesn't support the levels for L<Log::Dispatch>.  But
+supporting those levels is as easy as doing
+
+ use Log::Contextual
+   -levels => [qw( debug info notice warning error critical alert emergency )];
 
 =head2 -package_logger
 
@@ -274,17 +308,43 @@ Basically it sets the logger to be used if C<set_logger> is never called; so
       env_prefix => 'MY_PACKAGE'
    });
 
-=head1 A WORK IN PROGRESS
+=head1 SETTING DEFAULT IMPORT OPTIONS
 
-This module is certainly not complete, but we will not break the interface
-lightly, so I would say it's safe to use in production code.  The main result
-from that at this point is that doing:
+Eventually you will get tired of writing the following in every single one of
+your packages:
 
- use Log::Contextual;
+ use Log::Log4perl;
+ use Log::Log4perl ':easy';
+ BEGIN { Log::Log4perl->easy_init($DEBUG) }
 
-will die as we do not yet know what the defaults should be.  If it turns out
-that nearly everyone uses the C<:log> tag and C<:dlog> is really rare, we'll
-probably make C<:log> the default.  But only time and usage will tell.
+ use Log::Contextual -logger => Log::Log4perl->get_logger;
+
+You can set any of the import options for your whole project if you define your
+own C<Log::Contextual> subclass as follows:
+
+ package MyApp::Log::Contextual;
+
+ use base 'Log::Contextual';
+
+ use Log::Log4perl ':easy';
+ Log::Log4perl->easy_init($DEBUG)
+
+ sub arg_logger { $_[1] || Log::Log4perl->get_logger }
+ sub arg_levels { [qw(debug trace warn info error fatal custom_level)] }
+
+ # and *maybe* even these:
+ sub arg_package_logger { $_[1] }
+ sub arg_default_logger { $_[1] }
+
+Note the C<< $_[1] || >> in C<arg_logger>.  All of these methods are passed the
+values passed in from the arguments to the subclass, so you can either throw
+them away, honor them, die on usage, or whatever.  To be clear, if you define
+your subclass, and someone uses it as follows:
+
+ use MyApp::Log::Contextual -logger => $foo, -levels => [qw(bar baz biff)];
+
+Your C<arg_logger> method will get C<$foo> and your C<arg_levels>
+will get C<[qw(bar baz biff)]>;
 
 =head1 FUNCTIONS
 
