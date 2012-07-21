@@ -3,7 +3,7 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.004200';
+our $VERSION = '0.004201';
 
 my @levels = qw(debug trace warn info error fatal);
 
@@ -254,7 +254,7 @@ C<Log::Contextual> you will be able to swap underlying loggers later.
 
 =item * Powerful
 
-C<Log::Contextual> chooses which logger to use based on L<< user defined C<CodeRef>s|/LOGGER CODEREF>>.
+C<Log::Contextual> chooses which logger to use based on L<< user defined C<CodeRef>s|/LOGGER CODEREF >>.
 Normally you don't need to know this, but you can take advantage of it when you
 need to later
 
