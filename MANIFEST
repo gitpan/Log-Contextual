@@ -15,6 +15,7 @@ Makefile.PL
 MANIFEST			This list of files
 META.yml
 t/base.t
+t/caller.t
 t/default_logger.t
 t/dlog.t
 t/eg.t
