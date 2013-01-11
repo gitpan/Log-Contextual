@@ -3,7 +3,8 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.004300';
+our $VERSION = '0.005000_01';
+$VERSION = eval $VERSION if $VERSION =~ /_/; # numify for warning-free dev releases
 
 my @levels = qw(debug trace warn info error fatal);
 
@@ -11,10 +12,6 @@ use Exporter::Declare;
 use Exporter::Declare::Export::Generator;
 use Data::Dumper::Concise;
 use Scalar::Util 'blessed';
-
-my @dlog = ((map "Dlog_$_", @levels), (map "DlogS_$_", @levels));
-
-my @log = ((map "log_$_", @levels), (map "logS_$_", @levels));
 
 eval {
    require Log::Log4perl;
@@ -24,166 +21,136 @@ eval {
 
 # ____ is because tags must have at least one export and we don't want to
 # export anything but the levels selected
-sub ____ {}
+sub ____ { }
 
-exports ('____',
-   @dlog, @log,
-   qw( set_logger with_logger )
-);
+exports(qw(____ set_logger with_logger ));
 
 export_tag dlog => ('____');
 export_tag log  => ('____');
 import_arguments qw(logger package_logger default_logger);
 
+sub router {
+   our $Router_Instance ||= do {
+      require Log::Contextual::Router;
+      Log::Contextual::Router->new
+     }
+}
+
+sub arg_logger         { $_[1] }
+sub arg_levels         { $_[1] || [qw(debug trace warn info error fatal)] }
+sub arg_package_logger { $_[1] }
+sub arg_default_logger { $_[1] }
+
 sub before_import {
    my ($class, $importer, $spec) = @_;
+   my $router      = $class->router;
+   my $exports     = $spec->exports;
+   my %router_args = (
+      exporter  => $class,
+      target    => $importer,
+      arguments => $spec->argument_info
+   );
 
-   my @tags = $class->default_import($spec)
-      if $spec->config->{default};
+   die 'Log::Contextual does not have a default import list'
+     if $spec->config->{default};
 
-   for (@tags) {
-      die "only tags are supported for defaults at this time"
-         unless $_ =~ /^:(.*)$/;
+   $router->before_import(%router_args);
 
-      $spec->config->{$1} = 1;
+   if ($exports->{'&set_logger'}) {
+      die ref($router) . " does not support set_logger()"
+        unless $router->does('Log::Contextual::Role::Router::SetLogger');
+
+      $spec->add_export('&set_logger', sub { $router->set_logger(@_) })
+   }
+
+   if ($exports->{'&with_logger'}) {
+      die ref($router) . " does not support with_logger()"
+        unless $router->does('Log::Contextual::Role::Router::WithLogger');
+
+      $spec->add_export('&with_logger', sub { $router->with_logger(@_) })
    }
 
    my @levels = @{$class->arg_levels($spec->config->{levels})};
    for my $level (@levels) {
       if ($spec->config->{log}) {
-         $spec->add_export("&log_$level", sub (&@) {
-            _do_log( $level => _get_logger( caller ), shift @_, @_)
-         });
-         $spec->add_export("&logS_$level", sub (&@) {
-            _do_logS( $level => _get_logger( caller ), $_[0], $_[1])
-         });
+         $spec->add_export(
+            "&log_$level",
+            sub (&@) {
+               my ($code, @args) = @_;
+               $router->handle_log_request(
+                  exporter       => $class,
+                  caller_package => scalar(caller),
+                  caller_level   => 1,
+                  message_level  => $level,
+                  message_sub    => $code,
+                  message_args   => \@args,
+               );
+               return @args;
+            });
+         $spec->add_export(
+            "&logS_$level",
+            sub (&@) {
+               my ($code, @args) = @_;
+               $router->handle_log_request(
+                  exporter       => $class,
+                  caller_package => scalar(caller),
+                  caller_level   => 1,
+                  message_level  => $level,
+                  message_sub    => $code,
+                  message_args   => \@args,
+               );
+               return $args[0];
+            });
       }
       if ($spec->config->{dlog}) {
-         $spec->add_export("&Dlog_$level", sub (&@) {
-           my ($code, @args) = @_;
-           return _do_log( $level => _get_logger( caller ), sub {
-              local $_ = (@args?Data::Dumper::Concise::Dumper @args:'()');
-              $code->(@_)
-           }, @args );
-         });
-         $spec->add_export("&DlogS_$level", sub (&$) {
-           my ($code, $ref) = @_;
-           _do_logS( $level => _get_logger( caller ), sub {
-              local $_ = Data::Dumper::Concise::Dumper $ref;
-              $code->($ref)
-           }, $ref )
-         });
+         $spec->add_export(
+            "&Dlog_$level",
+            sub (&@) {
+               my ($code, @args) = @_;
+               my $wrapped = sub {
+                  local $_ = (@_ ? Data::Dumper::Concise::Dumper @_ : '()');
+                  &$code;
+               };
+               $router->handle_log_request(
+                  exporter       => $class,
+                  caller_package => scalar(caller),
+                  caller_level   => 1,
+                  message_level  => $level,
+                  message_sub    => $wrapped,
+                  message_args   => \@args,
+               );
+               return @args;
+            });
+         $spec->add_export(
+            "&DlogS_$level",
+            sub (&$) {
+               my ($code, $ref) = @_;
+               my $wrapped = sub {
+                  local $_ = Data::Dumper::Concise::Dumper($_[0]);
+                  &$code;
+               };
+               $router->handle_log_request(
+                  exporter       => $class,
+                  caller_package => scalar(caller),
+                  caller_level   => 1,
+                  message_level  => $level,
+                  message_sub    => $wrapped,
+                  message_args   => [$ref],
+               );
+               return $ref;
+            });
       }
    }
 }
 
-sub default_import {
-   my ($class) = shift;
-
-   die 'Log::Contextual does not have a default import list';
-
-   ()
-}
-
-sub arg_logger { $_[1] }
-sub arg_levels { $_[1] || [qw(debug trace warn info error fatal)] }
-sub arg_package_logger { $_[1] }
-sub arg_default_logger { $_[1] }
-
 sub after_import {
-   my ($class, $importer, $specs) = @_;
-
-   if (my $l = $class->arg_logger($specs->config->{logger})) {
-      set_logger($l)
-   }
-
-   if (my $l = $class->arg_package_logger($specs->config->{package_logger})) {
-      _set_package_logger_for($importer, $l)
-   }
-
-   if (my $l = $class->arg_default_logger($specs->config->{default_logger})) {
-      _set_default_logger_for($importer, $l)
-   }
-}
-
-our $Get_Logger;
-our %Default_Logger;
-our %Package_Logger;
-
-sub _set_default_logger_for {
-   my $logger = $_[1];
-   if(ref $logger ne 'CODE') {
-      die 'logger was not a CodeRef or a logger object.  Please try again.'
-         unless blessed($logger);
-      $logger = do { my $l = $logger; sub { $l } }
-   }
-   $Default_Logger{$_[0]} = $logger
-}
-
-sub _set_package_logger_for {
-   my $logger = $_[1];
-   if(ref $logger ne 'CODE') {
-      die 'logger was not a CodeRef or a logger object.  Please try again.'
-         unless blessed($logger);
-      $logger = do { my $l = $logger; sub { $l } }
-   }
-   $Package_Logger{$_[0]} = $logger
-}
-
-sub _get_logger($) {
-   my $package = shift;
-   (
-      $Package_Logger{$package} ||
-      $Get_Logger ||
-      $Default_Logger{$package} ||
-      die q( no logger set!  you can't try to log something without a logger! )
-   )->($package, { caller_level => 2 });
-}
-
-sub set_logger {
-   my $logger = $_[0];
-   if(ref $logger ne 'CODE') {
-      die 'logger was not a CodeRef or a logger object.  Please try again.'
-         unless blessed($logger);
-      $logger = do { my $l = $logger; sub { $l } }
-   }
-
-   warn 'set_logger (or -logger) called more than once!  This is a bad idea!'
-      if $Get_Logger;
-   $Get_Logger = $logger;
-}
-
-sub with_logger {
-   my $logger = $_[0];
-   if(ref $logger ne 'CODE') {
-      die 'logger was not a CodeRef or a logger object.  Please try again.'
-         unless blessed($logger);
-      $logger = do { my $l = $logger; sub { $l } }
-   }
-   local $Get_Logger = $logger;
-   $_[1]->();
-}
-
-sub _do_log {
-   my $level  = shift;
-   my $logger = shift;
-   my $code   = shift;
-   my @values = @_;
-
-   $logger->$level($code->(@_))
-      if $logger->${\"is_$level"};
-   @values
-}
-
-sub _do_logS {
-   my $level  = shift;
-   my $logger = shift;
-   my $code   = shift;
-   my $value  = shift;
-
-   $logger->$level($code->($value))
-      if $logger->${\"is_$level"};
-   $value
+   my ($class, $importer, $spec) = @_;
+   my %router_args = (
+      exporter  => $class,
+      target    => $importer,
+      arguments => $spec->argument_info
+   );
+   $class->router->after_import(%router_args);
 }
 
 1;
@@ -213,9 +180,11 @@ Log::Contextual - Simple logging interface with a contextual log
      levels => [qw( trace debug )]
    });
 
+   my @args = @_;
+
    with_logger $minilogger => sub {
      log_trace { 'foo entered' };
-     my ($foo, $bar) = Dlog_trace { "params for foo: $_" } @_;
+     my ($foo, $bar) = Dlog_trace { "params for foo: $_" } @args;
      # ...
      log_trace { 'foo left' };
    };
@@ -389,7 +358,6 @@ own C<Log::Contextual> subclass as follows:
 
  sub arg_default_logger { $_[1] || Log::Log4perl->get_logger }
  sub arg_levels { [qw(debug trace warn info error fatal custom_level)] }
- sub default_import { ':log' }
 
  # or maybe instead of default_logger
  sub arg_package_logger { $_[1] }
@@ -407,17 +375,6 @@ if you define your subclass, and someone uses it as follows:
 
 Your C<arg_default_logger> method will get C<$foo> and your C<arg_levels>
 will get C<[qw(bar baz biff)]>;
-
-Additionally, the C<default_import> method is what happens if a user tries to
-use your subclass with no arguments.  The default just dies, but if you'd like
-to change the default to import a tag merely return the tags you'd like to
-import.  So the following will all work:
-
- sub default_import { ':log' }
-
- sub default_import { ':dlog' }
-
- sub default_import { qw(:dlog :log ) }
 
 =head1 FUNCTIONS
 
@@ -653,9 +610,26 @@ The first six merely need to return true if that level is enabled.  The latter
 six take the results of whatever the user returned from their coderef and log
 them.  For a basic example see L<Log::Contextual::SimpleLogger>.
 
+=head1 LOG ROUTING
+
+In between the loggers and the log functions is a log router that is responsible for
+finding a logger to handle the log event and passing the log information to the
+logger. This relationship is described in the documentation for C<Log::Contextual::Role::Router>.
+
+C<Log::Contextual> and packages that extend it will by default share a router singleton that
+implements the with_logger() and set_logger() functions and also respects the -logger,
+-package_logger, and -default_logger import options with their associated default value
+functions. The router singleton is available as the return value of the router() function. Users
+of Log::Contextual may overload router() to return instances of custom log routers that
+could for example work with loggers that use a different interface.
+
 =head1 AUTHOR
 
 frew - Arthur Axel "fREW" Schmidt <frioux@gmail.com>
+
+=head1 CONTRIBUTORS
+
+triddle - Tyler Riddle <t.riddle@shadowcat.co.uk>
 
 =head1 DESIGNER
 
