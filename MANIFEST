@@ -21,10 +21,12 @@ META.yml
 t/arg.t
 t/base.t
 t/caller.t
+t/default_import.t
 t/default_logger.t
 t/dlog.t
 t/eg.t
 t/lib/BaseLogger.pm
+t/lib/DefaultImportLogger.pm
 t/lib/TestExporter.pm
 t/lib/TestRouter.pm
 t/log.t
