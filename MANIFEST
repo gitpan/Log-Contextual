@@ -34,5 +34,6 @@ t/log4perl.conf
 t/log4perl.t
 t/package_logger.t
 t/router_api.t
+t/rt83267.t
 t/simplelogger.t
 t/warnlogger.t
