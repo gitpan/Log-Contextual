@@ -3,7 +3,7 @@ package Log::Contextual;
 use strict;
 use warnings;
 
-our $VERSION = '0.005002';
+our $VERSION = '0.005003';
 $VERSION = eval $VERSION if $VERSION =~ /_/; # numify for warning-free dev releases
 
 my @levels = qw(debug trace warn info error fatal);
@@ -177,6 +177,16 @@ sub after_import {
       arguments => $spec->argument_info
    );
    $class->router->after_import(%router_args);
+}
+
+for (qw(set with)) {
+   no strict 'refs';
+   my $sub = "${_}_logger";
+   *{"Log::Contextual::$sub"} = sub {
+      die "$sub is no longer a direct sub in Log::Contextual.  " .
+      'Note that this feature was never tested nor documented.  ' .
+      "Please fix your code to import $sub instead of trying to use it directly"
+   }
 }
 
 1;
