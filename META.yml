@@ -24,9 +24,9 @@ requires:
   Carp: 0
   Data::Dumper::Concise: 0
   Exporter::Declare: 0.106
-  Moo: 0
+  Moo: 1.003
   Scalar::Util: 0
   perl: 5.6.0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.005003
+version: 0.005004
