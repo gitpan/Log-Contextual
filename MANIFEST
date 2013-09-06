@@ -8,6 +8,8 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Log/Contextual.pm
+lib/Log/Contextual/Easy/Default.pm
+lib/Log/Contextual/Easy/Package.pm
 lib/Log/Contextual/Role/Router.pm
 lib/Log/Contextual/Role/Router/SetLogger.pm
 lib/Log/Contextual/Role/Router/WithLogger.pm
@@ -24,9 +26,12 @@ t/caller.t
 t/default_import.t
 t/default_logger.t
 t/dlog.t
+t/easy.t
 t/eg.t
 t/lib/BaseLogger.pm
 t/lib/DefaultImportLogger.pm
+t/lib/My/Module.pm
+t/lib/My/Module2.pm
 t/lib/TestExporter.pm
 t/lib/TestRouter.pm
 t/log.t
