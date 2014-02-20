@@ -1,4 +1,6 @@
 package Log::Contextual::WarnLogger;
+$Log::Contextual::WarnLogger::VERSION = '0.006001';
+# ABSTRACT: logger for libraries using Log::Contextual
 
 use strict;
 use warnings;
@@ -117,10 +119,6 @@ sub _log {
 
 __END__
 
-=head1 NAME
-
-Log::Contextual::WarnLogger - Simple logger for libraries using Log::Contextual
-
 =head1 SYNOPSIS
 
  package My::Package;
@@ -155,16 +153,13 @@ works.
 
 Arguments: C<< Dict[ env_prefix => Str, levels => List ] $conf >>
 
- my $l = Log::Contextual::WarnLogger->new({
-   env_prefix => 'BAR'
- });
+ my $l = Log::Contextual::WarnLogger->new({ env_prefix => 'BAR' });
 
 or:
 
  my $l = Log::Contextual::WarnLogger->new({
    env_prefix => 'BAR',
-   levels => [ 'level1', 'level2' ]
-
+   levels => [ 'level1', 'level2' ],
  });
 
 Creates a new logger object where C<env_prefix> defines what the prefix is for
@@ -203,8 +198,6 @@ variables will be used:
 Note that C<UPTO> is a convenience variable.  If you set
 C<< FOO_UPTO=TRACE >> it will enable all log levels.  Similarly, if you
 set it to C<FATAL> only fatal will be enabled.
-
-=back
 
 =head2 $level
 
@@ -277,18 +270,6 @@ environment variable is enabled.
 
 If different levels are specified, appropriate is_$level functions work as you
 would expect.
-
-=head1 AUTHOR
-
-See L<Log::Contextual/"AUTHOR">
-
-=head1 COPYRIGHT
-
-See L<Log::Contextual/"COPYRIGHT">
-
-=head1 LICENSE
-
-See L<Log::Contextual/"LICENSE">
 
 =cut
 

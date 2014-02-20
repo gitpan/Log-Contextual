@@ -1,4 +1,9 @@
 package Log::Contextual::Easy::Package;
+$Log::Contextual::Easy::Package::VERSION = '0.006001';
+# ABSTRACT: Import all logging methods with WarnLogger as default package logger
+
+use strict;
+use warnings;
 
 use base 'Log::Contextual';
 
@@ -18,10 +23,6 @@ sub default_import { qw(:dlog :log ) }
 1;
 
 __END__
-
-=head1 NAME
-
-Log::Contextual::Easy::Package - Import all logging methods with WarnLogger as default package logger
 
 =head1 SYNOPSIS
 
@@ -58,8 +59,6 @@ For what C<::Package> implies, see L<Log::Contextual/-package_logger>.
 =head1 SEE ALSO
 
 =over 4
-
-=item L<Log::Contextual>
 
 =item L<Log::Contextual::Easy::Default>
 

@@ -1,32 +1,27 @@
 ---
 abstract: 'Simple logging interface with a contextual log'
 author:
-  - "frew - Arthur Axel \"fREW\" Schmidt <frioux@gmail.com>"
+  - "Arthur Axel \"fREW\" Schmidt <frioux+cpan@gmail.com>"
 build_requires:
-  ExtUtils::MakeMaker: 6.59
   Test::Fatal: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.59
-distribution_type: module
-dynamic_config: 1
-generated_by: 'Module::Install version 1.06'
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 5.013, CPAN::Meta::Converter version 2.132830'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-module_name: Log::Contextual
 name: Log-Contextual
-no_index:
-  directory:
-    - inc
-    - t
 requires:
   Carp: 0
   Data::Dumper::Concise: 0
   Exporter::Declare: 0.111
   Moo: 1.003
   Scalar::Util: 0
-  perl: 5.6.0
+  Sub::Identify: 0.04
 resources:
-  license: http://dev.perl.org/licenses/
-version: 0.006000
+  bugtracker: https://github.com/frioux/Log-Contextual/issues
+  homepage: https://github.com/frioux/Log-Contextual
+  repository: https://github.com/frioux/Log-Contextual.git
+version: 0.006001

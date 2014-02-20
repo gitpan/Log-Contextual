@@ -1,5 +1,5 @@
 package Log::Contextual::Router;
-
+$Log::Contextual::Router::VERSION = '0.006001';
 use Moo;
 use Scalar::Util 'blessed';
 
