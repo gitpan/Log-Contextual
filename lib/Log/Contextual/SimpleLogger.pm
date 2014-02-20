@@ -1,5 +1,5 @@
 package Log::Contextual::SimpleLogger;
-$Log::Contextual::SimpleLogger::VERSION = '0.006001';
+$Log::Contextual::SimpleLogger::VERSION = '0.006002';
 # ABSTRACT: Super simple logger made for playing with Log::Contextual
 
 
@@ -59,6 +59,18 @@ sub _log {
 1;
 
 __END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Log::Contextual::SimpleLogger - Super simple logger made for playing with Log::Contextual
+
+=head1 VERSION
+
+version 0.006002
 
 =head1 SYNOPSIS
 
@@ -181,5 +193,15 @@ level is enabled.
 
  say q{fatal'ing} if $l->is_fatal;
 
-=cut
+=head1 AUTHOR
 
+Arthur Axel "fREW" Schmidt <frioux+cpan@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Arthur Axel "fREW" Schmidt.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

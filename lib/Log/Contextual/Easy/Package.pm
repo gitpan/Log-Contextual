@@ -1,5 +1,5 @@
 package Log::Contextual::Easy::Package;
-$Log::Contextual::Easy::Package::VERSION = '0.006001';
+$Log::Contextual::Easy::Package::VERSION = '0.006002';
 # ABSTRACT: Import all logging methods with WarnLogger as default package logger
 
 use strict;
@@ -23,6 +23,18 @@ sub default_import { qw(:dlog :log ) }
 1;
 
 __END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Log::Contextual::Easy::Package - Import all logging methods with WarnLogger as default package logger
+
+=head1 VERSION
+
+version 0.006002
 
 =head1 SYNOPSIS
 
@@ -63,3 +75,16 @@ For what C<::Package> implies, see L<Log::Contextual/-package_logger>.
 =item L<Log::Contextual::Easy::Default>
 
 =back
+
+=head1 AUTHOR
+
+Arthur Axel "fREW" Schmidt <frioux+cpan@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Arthur Axel "fREW" Schmidt.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

@@ -1,5 +1,5 @@
 package Log::Contextual;
-$Log::Contextual::VERSION = '0.006001';
+$Log::Contextual::VERSION = '0.006002';
 # ABSTRACT: Simple logging interface with a contextual log
 
 use strict;
@@ -217,6 +217,18 @@ for (qw(set with)) {
 1;
 
 __END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Log::Contextual - Simple logging interface with a contextual log
+
+=head1 VERSION
+
+version 0.006002
 
 =head1 SYNOPSIS
 
@@ -697,8 +709,6 @@ could for example work with loggers that use a different interface.
 
 =head1 CONTRIBUTORS
 
-=encoding utf8
-
 triddle - Tyler Riddle <t.riddle@shadowcat.co.uk>
 
 voj - Jakob Voß <voss@gbv.de>
@@ -707,5 +717,15 @@ voj - Jakob Voß <voss@gbv.de>
 
 mst - Matt S. Trout <mst@shadowcat.co.uk>
 
-=cut
+=head1 AUTHOR
 
+Arthur Axel "fREW" Schmidt <frioux+cpan@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Arthur Axel "fREW" Schmidt.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
