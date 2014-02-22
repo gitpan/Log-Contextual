@@ -25,13 +25,12 @@ my %WriteMakefileArgs = (
     "Data::Dumper::Concise" => 0,
     "Exporter::Declare" => "0.111",
     "Moo" => "1.003",
-    "Scalar::Util" => 0,
-    "Sub::Identify" => "0.04"
+    "Scalar::Util" => 0
   },
   "TEST_REQUIRES" => {
     "Test::Fatal" => 0
   },
-  "VERSION" => "0.006002",
+  "VERSION" => "0.006003",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -44,7 +43,6 @@ my %FallbackPrereqs = (
   "Exporter::Declare" => "0.111",
   "Moo" => "1.003",
   "Scalar::Util" => 0,
-  "Sub::Identify" => "0.04",
   "Test::Fatal" => 0
 );
 

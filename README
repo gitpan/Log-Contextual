@@ -2,7 +2,7 @@ NAME
     Log::Contextual - Simple logging interface with a contextual log
 
 VERSION
-    version 0.006002
+    version 0.006003
 
 SYNOPSIS
      use Log::Contextual qw( :log :dlog set_logger with_logger );

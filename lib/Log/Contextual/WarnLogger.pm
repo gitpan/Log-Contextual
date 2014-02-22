@@ -1,5 +1,5 @@
 package Log::Contextual::WarnLogger;
-$Log::Contextual::WarnLogger::VERSION = '0.006002';
+$Log::Contextual::WarnLogger::VERSION = '0.006003';
 # ABSTRACT: logger for libraries using Log::Contextual
 
 use strict;
@@ -129,7 +129,7 @@ Log::Contextual::WarnLogger - logger for libraries using Log::Contextual
 
 =head1 VERSION
 
-version 0.006002
+version 0.006003
 
 =head1 SYNOPSIS
 

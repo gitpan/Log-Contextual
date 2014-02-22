@@ -4,7 +4,7 @@
       "Arthur Axel \"fREW\" Schmidt <frioux+cpan@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.013, CPAN::Meta::Converter version 2.132830",
+   "generated_by" : "Dist::Zilla version 5.013, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -30,8 +30,7 @@
             "Data::Dumper::Concise" : "0",
             "Exporter::Declare" : "0.111",
             "Moo" : "1.003",
-            "Scalar::Util" : "0",
-            "Sub::Identify" : "0.04"
+            "Scalar::Util" : "0"
          }
       },
       "test" : {
@@ -52,6 +51,6 @@
          "web" : "https://github.com/frioux/Log-Contextual"
       }
    },
-   "version" : "0.006002"
+   "version" : "0.006003"
 }
 

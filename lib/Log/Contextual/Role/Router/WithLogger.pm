@@ -1,5 +1,5 @@
 package Log::Contextual::Role::Router::WithLogger;
-$Log::Contextual::Role::Router::WithLogger::VERSION = '0.006002';
+$Log::Contextual::Role::Router::WithLogger::VERSION = '0.006003';
 use Moo::Role;
 
 requires 'with_logger';
@@ -18,7 +18,7 @@ Log::Contextual::Role::Router::WithLogger
 
 =head1 VERSION
 
-version 0.006002
+version 0.006003
 
 =head1 AUTHOR
 
