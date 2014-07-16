@@ -1,5 +1,7 @@
 package Log::Contextual::Role::Router::SetLogger;
-$Log::Contextual::Role::Router::SetLogger::VERSION = '0.006003';
+$Log::Contextual::Role::Router::SetLogger::VERSION = '0.006004';
+# ABSTRACT: Abstract interface between loggers and logging code blocks
+
 use Moo::Role;
 
 requires 'set_logger';
@@ -14,11 +16,11 @@ __END__
 
 =head1 NAME
 
-Log::Contextual::Role::Router::SetLogger
+Log::Contextual::Role::Router::SetLogger - Abstract interface between loggers and logging code blocks
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 AUTHOR
 

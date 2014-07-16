@@ -1,5 +1,5 @@
 package Log::Contextual::Easy::Default;
-$Log::Contextual::Easy::Default::VERSION = '0.006003';
+$Log::Contextual::Easy::Default::VERSION = '0.006004';
 # ABSTRACT: Import all logging methods with WarnLogger as default
 
 use strict;
@@ -34,7 +34,7 @@ Log::Contextual::Easy::Default - Import all logging methods with WarnLogger as d
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 SYNOPSIS
 

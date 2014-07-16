@@ -1,5 +1,5 @@
 package Log::Contextual::SimpleLogger;
-$Log::Contextual::SimpleLogger::VERSION = '0.006003';
+$Log::Contextual::SimpleLogger::VERSION = '0.006004';
 # ABSTRACT: Super simple logger made for playing with Log::Contextual
 
 
@@ -70,7 +70,7 @@ Log::Contextual::SimpleLogger - Super simple logger made for playing with Log::C
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 SYNOPSIS
 

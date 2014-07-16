@@ -2,7 +2,7 @@ NAME
     Log::Contextual - Simple logging interface with a contextual log
 
 VERSION
-    version 0.006003
+    version 0.006004
 
 SYNOPSIS
      use Log::Contextual qw( :log :dlog set_logger with_logger );
@@ -80,23 +80,23 @@ DESCRIPTION
 
       "Log::Contextual" chooses which logger to use based on user defined
       "CodeRef"s. Normally you don't need to know this, but you can take
-      advantage of it when you need to later
+      advantage of it when you need to later.
 
     * Scalable
 
-      If you just want to add logging to your extremely basic application,
-      start with Log::Contextual::SimpleLogger and then as your needs grow
-      you can switch to Log::Dispatchouli or Log::Dispatch or Log::Log4perl
-      or whatever else.
+      If you just want to add logging to your basic application, start with
+      Log::Contextual::SimpleLogger and then as your needs grow you can
+      switch to Log::Dispatchouli or Log::Dispatch or Log::Log4perl or
+      whatever else.
 
     This module is a simple interface to extensible logging. It exists to
     abstract your logging interface so that logging is as painless as
     possible, while still allowing you to switch from one logger to another.
 
     It is bundled with a really basic logger, Log::Contextual::SimpleLogger,
-    but in general you should use a real logger instead of that. For
-    something more serious but not overly complicated, try Log::Dispatchouli
-    (see "SYNOPSIS" for example.)
+    but in general you should use a real logger instead. For something more
+    serious but not overly complicated, try Log::Dispatchouli (see
+    "SYNOPSIS" for example.)
 
 A WORK IN PROGRESS
     This module is certainly not complete, but we will not break the
@@ -144,7 +144,7 @@ IMPORT OPTIONS
     option except "-package_logger" sets the logger for the current package.
 
     Unlike "-default_logger", "-package_logger" cannot be overridden with
-    "set_logger".
+    "set_logger" or "with_logger".
 
      package My::Package;
      use Log::Contextual::SimpleLogger;
@@ -204,8 +204,8 @@ SETTING DEFAULT IMPORT OPTIONS
 
     Note the "$_[1] ||" in "arg_default_logger". All of these methods are
     passed the values passed in from the arguments to the subclass, so you
-    can either throw them away, honor them, die on usage, or whatever. To be
-    clear, if you define your subclass, and someone uses it as follows:
+    can either throw them away, honor them, die on usage, etc. To be clear,
+    if you define your subclass, and someone uses it as follows:
 
      use MyApp::Log::Contextual -default_logger => $foo,
                                 -levels => [qw(bar baz biff)];
@@ -353,8 +353,8 @@ FUNCTIONS
 LOGGER CODEREF
     Anywhere a logger object can be passed, a coderef is accepted. This is
     so that the user can use different logger objects based on runtime
-    information. The logger coderef is passed the package of the caller the
-    caller level the coderef needs to use if it wants more caller
+    information. The logger coderef is passed the package of the caller, and
+    the caller level the coderef needs to use if it wants more caller
     information. The latter is in a hashref to allow for more options in the
     future.
 

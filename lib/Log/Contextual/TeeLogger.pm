@@ -1,5 +1,5 @@
 package Log::Contextual::TeeLogger;
-$Log::Contextual::TeeLogger::VERSION = '0.006003';
+$Log::Contextual::TeeLogger::VERSION = '0.006004';
 # ABSTRACT: Output to more than one logger
 
 use strict;
@@ -54,7 +54,7 @@ Log::Contextual::TeeLogger - Output to more than one logger
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 SYNOPSIS
 

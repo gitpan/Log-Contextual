@@ -1,5 +1,5 @@
 package Log::Contextual;
-$Log::Contextual::VERSION = '0.006003';
+$Log::Contextual::VERSION = '0.006004';
 # ABSTRACT: Simple logging interface with a contextual log
 
 use strict;
@@ -240,7 +240,7 @@ Log::Contextual - Simple logging interface with a contextual log
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 SYNOPSIS
 
@@ -321,11 +321,11 @@ C<Log::Contextual> you will be able to swap underlying loggers later.
 
 C<Log::Contextual> chooses which logger to use based on L<< user defined C<CodeRef>s|/LOGGER CODEREF >>.
 Normally you don't need to know this, but you can take advantage of it when you
-need to later
+need to later.
 
 =item * Scalable
 
-If you just want to add logging to your extremely basic application, start with
+If you just want to add logging to your basic application, start with
 L<Log::Contextual::SimpleLogger> and then as your needs grow you can switch to
 L<Log::Dispatchouli> or L<Log::Dispatch> or L<Log::Log4perl> or whatever else.
 
@@ -336,7 +336,7 @@ abstract your logging interface so that logging is as painless as possible,
 while still allowing you to switch from one logger to another.
 
 It is bundled with a really basic logger, L<Log::Contextual::SimpleLogger>,
-but in general you should use a real logger instead of that.  For something
+but in general you should use a real logger instead.  For something
 more serious but not overly complicated, try L<Log::Dispatchouli> (see
 L</SYNOPSIS> for example.)
 
@@ -390,7 +390,7 @@ The C<-package_logger> import option is similar to the C<-logger> import option
 except C<-package_logger> sets the logger for the current package.
 
 Unlike L</-default_logger>, C<-package_logger> cannot be overridden with
-L</set_logger>.
+L</set_logger> or L</with_logger>.
 
  package My::Package;
  use Log::Contextual::SimpleLogger;
@@ -449,7 +449,7 @@ own C<Log::Contextual> subclass as follows:
 
 Note the C<< $_[1] || >> in C<arg_default_logger>.  All of these methods are
 passed the values passed in from the arguments to the subclass, so you can
-either throw them away, honor them, die on usage, or whatever.  To be clear,
+either throw them away, honor them, die on usage, etc.  To be clear,
 if you define your subclass, and someone uses it as follows:
 
  use MyApp::Log::Contextual -default_logger => $foo,
@@ -623,7 +623,7 @@ slurping up (and also setting C<wantarray>) all the C<@args>
 
 Anywhere a logger object can be passed, a coderef is accepted.  This is so
 that the user can use different logger objects based on runtime information.
-The logger coderef is passed the package of the caller the caller level the
+The logger coderef is passed the package of the caller, and the caller level the
 coderef needs to use if it wants more caller information.  The latter is in
 a hashref to allow for more options in the future.
 

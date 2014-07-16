@@ -1,5 +1,7 @@
 package Log::Contextual::Router;
-$Log::Contextual::Router::VERSION = '0.006003';
+$Log::Contextual::Router::VERSION = '0.006004';
+# ABSTRACT: Route messages to loggers
+
 use Moo;
 use Scalar::Util 'blessed';
 
@@ -149,11 +151,11 @@ __END__
 
 =head1 NAME
 
-Log::Contextual::Router
+Log::Contextual::Router - Route messages to loggers
 
 =head1 VERSION
 
-version 0.006003
+version 0.006004
 
 =head1 AUTHOR
 
